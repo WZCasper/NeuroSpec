@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <RootNamespace>NeuroSpec</RootNamespace>
+    <AssemblyName>NeuroSpec</AssemblyName>
+    <Product>NeuroSpec</Product>
+    <AssemblyTitle>NeuroSpec</AssemblyTitle>
+    <Version>1.0.0</Version>
+
+    <!-- Параметры публикации в один портативный .exe-файл -->
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+    <!-- Обрезка (trimming) намеренно ОТКЛЮЧЕНА: библиотека System.Management
+         работает через COM/WMI, и агрессивная обрезка может сломать сбор
+         данных в собранном .exe. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>
