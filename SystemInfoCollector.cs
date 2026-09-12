@@ -11,39 +11,39 @@ namespace NeuroSpec
     /// <summary>
     /// Собирает информацию об оборудовании и операционной системе
     /// через WMI (Windows Management Instrumentation) и системные API.
-    /// Каждый метод защищён от сбоев: если конкретный класс WMI недоступен
-    /// (например, отключена служба WMI или недостаточно прав), возвращается
-    /// понятное сообщение вместо аварийного завершения приложения.
+    /// Каждый метод защищён от сбоев: если конкретный класс WMI недоступен,
+    /// возвращается null (что при отображении заменяется на локализованное
+    /// сообщение "не удалось определить") - без аварийного завершения.
+    /// Единицы измерения и служебные слова (ГБ, ядер/потоков и т.п.)
+    /// подставляются на языке, переданном параметром lang.
     /// </summary>
     public static class SystemInfoCollector
     {
-        private const string NotDetected = "Не удалось определить";
-
-        public static Task<SystemSpecs> CollectAsync()
+        public static Task<SystemSpecs> CollectAsync(AppLanguage lang)
         {
-            return Task.Run(() => Collect());
+            return Task.Run(() => Collect(lang));
         }
 
-        public static SystemSpecs Collect()
+        public static SystemSpecs Collect(AppLanguage lang)
         {
             return new SystemSpecs
             {
-                OperatingSystem = GetOperatingSystemInfo(),
+                OperatingSystem = GetOperatingSystemInfo(lang),
                 WindowsInstallDate = GetWindowsInstallDate(),
-                Processor = GetProcessorInfo(),
-                RandomAccessMemory = GetRamInfo(),
+                Processor = GetProcessorInfo(lang),
+                RandomAccessMemory = GetRamInfo(lang),
                 VideoController = GetVideoControllerInfo(),
                 Motherboard = GetMotherboardInfo(),
-                Bios = GetBiosInfo(),
+                Bios = GetBiosInfo(lang),
                 SerialNumber = GetSerialNumber(),
-                Storage = GetStorageInfo(),
-                DiskSpace = GetDiskSpaceInfo(),
+                Storage = GetStorageInfo(lang),
+                DiskSpace = GetDiskSpaceInfo(lang),
                 NetworkAdapters = GetNetworkAdaptersInfo(),
-                Monitors = GetMonitorsInfo()
+                Monitors = GetMonitorsInfo(lang)
             };
         }
 
-        private static string GetOperatingSystemInfo()
+        private static string GetOperatingSystemInfo(AppLanguage lang)
         {
             try
             {
@@ -65,7 +65,7 @@ namespace NeuroSpec
                     }
                     if (!string.IsNullOrWhiteSpace(version))
                     {
-                        result += $" (сборка {version})";
+                        result += Localization.GetFormat(lang, "BuildSuffixFormat", version);
                     }
 
                     return result;
@@ -73,10 +73,10 @@ namespace NeuroSpec
             }
             catch
             {
-                // WMI недоступен — вернём запасное значение ниже.
+                // WMI недоступен — вернём null, отобразится как "не удалось определить".
             }
 
-            return NotDetected;
+            return null;
         }
 
         private static string GetWindowsInstallDate()
@@ -100,10 +100,10 @@ namespace NeuroSpec
             {
             }
 
-            return NotDetected;
+            return null;
         }
 
-        private static string GetProcessorInfo()
+        private static string GetProcessorInfo(AppLanguage lang)
         {
             try
             {
@@ -127,7 +127,7 @@ namespace NeuroSpec
 
                     if (!string.IsNullOrEmpty(cores) && !string.IsNullOrEmpty(threads))
                     {
-                        name += $" ({cores} ядер, {threads} потоков)";
+                        name += Localization.GetFormat(lang, "CoresThreadsFormat", cores, threads);
                     }
 
                     names.Add(name);
@@ -142,10 +142,10 @@ namespace NeuroSpec
             {
             }
 
-            return NotDetected;
+            return null;
         }
 
-        private static string GetRamInfo()
+        private static string GetRamInfo(AppLanguage lang)
         {
             try
             {
@@ -182,11 +182,17 @@ namespace NeuroSpec
                 if (totalBytes > 0)
                 {
                     double gb = totalBytes / 1024.0 / 1024.0 / 1024.0;
-                    string result = $"{Math.Round(gb)} ГБ";
+                    string gbUnit = Localization.Get(lang, "GbUnit");
+                    string result = $"{Math.Round(gb)} {gbUnit}";
 
                     if (moduleCount > 0)
                     {
-                        result += $" ({moduleCount} {PluralizeRu(moduleCount, "модуль", "модуля", "модулей")})";
+                        string moduleWord = Localization.Pluralize(
+                            lang, moduleCount,
+                            Localization.Get(lang, "ModuleOne"),
+                            Localization.Get(lang, "ModuleFew"),
+                            Localization.Get(lang, "ModuleMany"));
+                        result += $" ({moduleCount} {moduleWord})";
                     }
 
                     return result;
@@ -196,7 +202,7 @@ namespace NeuroSpec
             {
             }
 
-            return NotDetected;
+            return null;
         }
 
         private static string GetVideoControllerInfo()
@@ -234,7 +240,7 @@ namespace NeuroSpec
             {
             }
 
-            return NotDetected;
+            return null;
         }
 
         private static string GetMotherboardInfo()
@@ -263,10 +269,10 @@ namespace NeuroSpec
             {
             }
 
-            return NotDetected;
+            return null;
         }
 
-        private static string GetBiosInfo()
+        private static string GetBiosInfo(AppLanguage lang)
         {
             try
             {
@@ -287,7 +293,7 @@ namespace NeuroSpec
                         try
                         {
                             DateTime releaseDate = ManagementDateTimeConverter.ToDateTime(releaseDateRaw);
-                            result += $" (от {releaseDate:dd.MM.yyyy})";
+                            result += Localization.GetFormat(lang, "BiosDateFormat", releaseDate);
                         }
                         catch
                         {
@@ -304,7 +310,7 @@ namespace NeuroSpec
             {
             }
 
-            return NotDetected;
+            return null;
         }
 
         private static string GetSerialNumber()
@@ -337,7 +343,7 @@ namespace NeuroSpec
             {
             }
 
-            return NotDetected;
+            return null;
         }
 
         /// <summary>
@@ -346,18 +352,18 @@ namespace NeuroSpec
         /// системы, Server Core без модуля хранения) - используем
         /// классический Win32_DiskDrive без указания типа.
         /// </summary>
-        private static string GetStorageInfo()
+        private static string GetStorageInfo(AppLanguage lang)
         {
-            string modern = GetStorageInfoModern();
+            string modern = GetStorageInfoModern(lang);
             if (modern != null)
             {
                 return modern;
             }
 
-            return GetStorageInfoLegacy();
+            return GetStorageInfoLegacy(lang);
         }
 
-        private static string GetStorageInfoModern()
+        private static string GetStorageInfoModern(AppLanguage lang)
         {
             try
             {
@@ -367,6 +373,7 @@ namespace NeuroSpec
                 var query = new ObjectQuery("SELECT FriendlyName, MediaType, Size FROM MSFT_PhysicalDisk");
                 using var searcher = new ManagementObjectSearcher(scope, query);
 
+                string gbUnit = Localization.Get(lang, "GbUnit");
                 var disks = new List<string>();
 
                 foreach (ManagementObject obj in searcher.Get())
@@ -393,7 +400,7 @@ namespace NeuroSpec
                     if (obj["Size"] != null && ulong.TryParse(obj["Size"].ToString(), out ulong sizeBytes) && sizeBytes > 0)
                     {
                         double sizeGb = sizeBytes / 1024.0 / 1024.0 / 1024.0;
-                        sizeInfo = $", {Math.Round(sizeGb)} ГБ";
+                        sizeInfo = $", {Math.Round(sizeGb)} {gbUnit}";
                     }
 
                     string typePart = string.IsNullOrEmpty(typeLabel) ? "" : $" [{typeLabel}]";
@@ -413,12 +420,13 @@ namespace NeuroSpec
             }
         }
 
-        private static string GetStorageInfoLegacy()
+        private static string GetStorageInfoLegacy(AppLanguage lang)
         {
             try
             {
                 using var searcher = new ManagementObjectSearcher("SELECT Model, Size FROM Win32_DiskDrive");
 
+                string gbUnit = Localization.Get(lang, "GbUnit");
                 var disks = new List<string>();
 
                 foreach (ManagementObject obj in searcher.Get())
@@ -433,7 +441,7 @@ namespace NeuroSpec
                     if (obj["Size"] != null && ulong.TryParse(obj["Size"].ToString(), out ulong sizeBytes) && sizeBytes > 0)
                     {
                         double sizeGb = sizeBytes / 1024.0 / 1024.0 / 1024.0;
-                        sizeInfo = $" ({Math.Round(sizeGb)} ГБ)";
+                        sizeInfo = $" ({Math.Round(sizeGb)} {gbUnit})";
                     }
 
                     disks.Add($"{model}{sizeInfo}");
@@ -448,10 +456,10 @@ namespace NeuroSpec
             {
             }
 
-            return NotDetected;
+            return null;
         }
 
-        private static string GetDiskSpaceInfo()
+        private static string GetDiskSpaceInfo(AppLanguage lang)
         {
             try
             {
@@ -484,7 +492,8 @@ namespace NeuroSpec
                     double sizeGb = size / 1024.0 / 1024.0 / 1024.0;
                     double freeGb = free / 1024.0 / 1024.0 / 1024.0;
 
-                    drives.Add($"{deviceId} {Math.Round(freeGb)} ГБ свободно из {Math.Round(sizeGb)} ГБ");
+                    drives.Add(Localization.GetFormat(
+                        lang, "DiskSpaceFormat", deviceId, Math.Round(freeGb), Math.Round(sizeGb)));
                 }
 
                 if (drives.Count > 0)
@@ -496,7 +505,7 @@ namespace NeuroSpec
             {
             }
 
-            return NotDetected;
+            return null;
         }
 
         private static string GetNetworkAdaptersInfo()
@@ -530,53 +539,36 @@ namespace NeuroSpec
             {
             }
 
-            return NotDetected;
+            return null;
         }
 
-        private static string GetMonitorsInfo()
+        private static string GetMonitorsInfo(AppLanguage lang)
         {
             try
             {
                 Screen[] screens = Screen.AllScreens;
                 if (screens != null && screens.Length > 0)
                 {
+                    string primarySuffix = Localization.Get(lang, "PrimaryMonitorSuffix");
+
                     var descriptions = screens
-                        .Select(s => $"{s.Bounds.Width}x{s.Bounds.Height}{(s.Primary ? " (основной)" : "")}")
+                        .Select(s => $"{s.Bounds.Width}x{s.Bounds.Height}{(s.Primary ? primarySuffix : "")}")
                         .ToList();
 
-                    string countText = $"{screens.Length} {PluralizeRu(screens.Length, "монитор", "монитора", "мониторов")}";
-                    return $"{countText}: {string.Join("; ", descriptions)}";
+                    string monitorWord = Localization.Pluralize(
+                        lang, screens.Length,
+                        Localization.Get(lang, "MonitorOne"),
+                        Localization.Get(lang, "MonitorFew"),
+                        Localization.Get(lang, "MonitorMany"));
+
+                    return $"{screens.Length} {monitorWord}: {string.Join("; ", descriptions)}";
                 }
             }
             catch
             {
             }
 
-            return NotDetected;
-        }
-
-        /// <summary>
-        /// Корректное склонение русских существительных по числу
-        /// (например: 1 модуль, 2 модуля, 5 модулей).
-        /// </summary>
-        private static string PluralizeRu(int number, string one, string few, string many)
-        {
-            int n = Math.Abs(number) % 100;
-            int n1 = n % 10;
-
-            if (n > 10 && n < 20)
-            {
-                return many;
-            }
-            if (n1 > 1 && n1 < 5)
-            {
-                return few;
-            }
-            if (n1 == 1)
-            {
-                return one;
-            }
-            return many;
+            return null;
         }
     }
 }

@@ -1,55 +1,35 @@
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace NeuroSpec
 {
     /// <summary>
-    /// Модель данных с характеристиками компьютера,
-    /// собранными приложением NeuroSpec.
+    /// Модель данных с характеристиками компьютера. Значения - как их
+    /// сообщает сама Windows/WMI (не переводятся). Свойство остаётся
+    /// пустым (null), если соответствующие данные собрать не удалось -
+    /// подходящее сообщение "не удалось определить" на выбранном языке
+    /// подставляется при отображении или экспорте.
     /// </summary>
     public class SystemSpecs
     {
-        public string OperatingSystem { get; set; } = string.Empty;
-        public string WindowsInstallDate { get; set; } = string.Empty;
-        public string Processor { get; set; } = string.Empty;
-        public string RandomAccessMemory { get; set; } = string.Empty;
-        public string VideoController { get; set; } = string.Empty;
-        public string Motherboard { get; set; } = string.Empty;
-        public string Bios { get; set; } = string.Empty;
-        public string SerialNumber { get; set; } = string.Empty;
-        public string Storage { get; set; } = string.Empty;
-        public string DiskSpace { get; set; } = string.Empty;
-        public string NetworkAdapters { get; set; } = string.Empty;
-        public string Monitors { get; set; } = string.Empty;
+        public string OperatingSystem { get; set; }
+        public string WindowsInstallDate { get; set; }
+        public string Processor { get; set; }
+        public string RandomAccessMemory { get; set; }
+        public string VideoController { get; set; }
+        public string Motherboard { get; set; }
+        public string Bios { get; set; }
+        public string SerialNumber { get; set; }
+        public string Storage { get; set; }
+        public string DiskSpace { get; set; }
+        public string NetworkAdapters { get; set; }
+        public string Monitors { get; set; }
 
         /// <summary>
-        /// Формирует текстовое представление всех характеристик
-        /// для копирования в буфер обмена или сохранения в .txt.
-        /// </summary>
-        public string ToClipboardText()
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("=== Характеристики компьютера (собрано в NeuroSpec) ===");
-            sb.AppendLine();
-            sb.AppendLine($"Операционная система: {OperatingSystem}");
-            sb.AppendLine($"Дата установки Windows: {WindowsInstallDate}");
-            sb.AppendLine($"Процессор: {Processor}");
-            sb.AppendLine($"Оперативная память: {RandomAccessMemory}");
-            sb.AppendLine($"Видеокарта: {VideoController}");
-            sb.AppendLine($"Материнская плата: {Motherboard}");
-            sb.AppendLine($"BIOS/UEFI: {Bios}");
-            sb.AppendLine($"Серийный номер: {SerialNumber}");
-            sb.AppendLine($"Накопители: {Storage}");
-            sb.AppendLine($"Свободное место: {DiskSpace}");
-            sb.AppendLine($"Сеть: {NetworkAdapters}");
-            sb.AppendLine($"Мониторы: {Monitors}");
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Формирует JSON-представление характеристик для сохранения в .json.
-        /// Кириллица не экранируется, чтобы файл оставался читаемым.
+        /// JSON всегда использует английские (camelCase) ключи независимо
+        /// от языка интерфейса - так удобнее для автоматической обработки.
+        /// Отсутствующие данные сохраняются как null, а не текстовая
+        /// заглушка - это корректнее для структурированного формата.
         /// </summary>
         public string ToJson()
         {
