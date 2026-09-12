@@ -25,7 +25,7 @@ jobs:
         run: dotnet restore NeuroSpec.csproj
 
       - name: Publish single-file portable exe
-        run: dotnet publish NeuroSpec.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o dist
+        run: dotnet publish NeuroSpec.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:Version=1.0.${{ github.run_number }} -o dist
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

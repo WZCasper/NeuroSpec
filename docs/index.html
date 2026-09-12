@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroSpec — характеристики компьютера</title>
+<link rel="icon" href="favicon.ico">
+<style>
+  :root {
+    --bg: #18181b;
+    --panel: #202024;
+    --border: #34343a;
+    --text: #e6e6e6;
+    --muted: #96969c;
+    --accent: #58a6ff;
+    --accent-hover: #3c8cf0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 60px 20px;
+    text-align: center;
+  }
+  h1 {
+    font-size: 42px;
+    color: var(--accent);
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+  }
+  p.subtitle {
+    color: var(--muted);
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 40px;
+  }
+  .download-btn {
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    padding: 16px 36px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    transition: background 0.15s ease;
+    display: inline-block;
+  }
+  .download-btn:hover {
+    background: var(--accent-hover);
+  }
+  .note {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 14px;
+  }
+  .features {
+    margin-top: 60px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    max-width: 780px;
+    width: 100%;
+    text-align: left;
+  }
+  .feature {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .feature h3 {
+    margin: 0 0 8px 0;
+    color: var(--accent);
+    font-size: 15px;
+  }
+  .feature p {
+    margin: 0;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  footer {
+    margin-top: 70px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <h1>NeuroSpec</h1>
+  <p class="subtitle">Портативная программа для просмотра характеристик компьютера</p>
+
+  <a class="download-btn" href="https://github.com/WZCasper/NeuroSpec/releases/latest/download/NeuroSpec.exe">
+    Скачать NeuroSpec для Windows
+  </a>
+  <p class="note">Один .exe-файл, 64-бит, установка не требуется</p>
+
+  <div class="features">
+    <div class="feature">
+      <h3>Полная информация</h3>
+      <p>ОС, процессор, ОЗУ, видеокарта, материнская плата, BIOS, накопители (с типом SSD/HDD), сеть и мониторы.</p>
+    </div>
+    <div class="feature">
+      <h3>Экспорт в один клик</h3>
+      <p>Текст в буфер обмена, картинка или файл .txt/.json — выберите удобный формат для отправки.</p>
+    </div>
+    <div class="feature">
+      <h3>Полностью портативно</h3>
+      <p>Не требует установки и прав администратора. Скачали — и сразу пользуетесь.</p>
+    </div>
+    <div class="feature">
+      <h3>Открытый исходный код</h3>
+      <p>Весь код и история сборок доступны на <a href="https://github.com/WZCasper/NeuroSpec" style="color:var(--accent)">GitHub</a>.</p>
+    </div>
+  </div>
+
+  <footer>
+    <a href="https://github.com/WZCasper/NeuroSpec/releases">Все версии на GitHub Releases</a>
+  </footer>
+</body>
+</html>
