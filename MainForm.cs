@@ -50,7 +50,7 @@ namespace NeuroSpec
         private readonly Label _versionLabel;
         private readonly Label _loadingLabel;
         private readonly Label _statusLabel;
-        private readonly Label _creditLabel;
+        private readonly LinkLabel _creditLabel;
         private readonly LinkLabel _updateLinkLabel;
         private readonly ComboBox _languageSelector;
         private readonly Button _copyButton;
@@ -113,12 +113,11 @@ namespace NeuroSpec
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 5,
+                RowCount = 4,
                 AutoSize = true,
                 BackColor = ColorBackground,
                 Margin = new Padding(0, 0, 0, 15)
             };
-            headerPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             headerPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             headerPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             headerPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -154,15 +153,43 @@ namespace NeuroSpec
             infoRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
             infoRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
+            var versionRow = new FlowLayoutPanel
+            {
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Anchor = AnchorStyles.Left,
+                BackColor = Color.Transparent,
+                Margin = new Padding(0)
+            };
+
             _versionLabel = new Label
             {
                 Font = new Font("Segoe UI", 8f, FontStyle.Regular),
                 ForeColor = ColorTextMuted,
                 AutoSize = true,
-                Anchor = AnchorStyles.Left,
+                Margin = new Padding(0, 0, 8, 0),
                 BackColor = Color.Transparent
             };
-            infoRow.Controls.Add(_versionLabel, 0, 0);
+            versionRow.Controls.Add(_versionLabel);
+
+            _creditLabel = new LinkLabel
+            {
+                Text = "by 亗 Casper",
+                Font = new Font("Segoe UI", 8f, FontStyle.Italic),
+                LinkColor = ColorTextMuted,
+                ActiveLinkColor = ColorAccent,
+                VisitedLinkColor = ColorTextMuted,
+                LinkBehavior = LinkBehavior.HoverUnderline,
+                AutoSize = true,
+                Margin = new Padding(0),
+                BackColor = Color.Transparent
+            };
+            _creditLabel.LinkClicked += CreditLabel_LinkClicked;
+            versionRow.Controls.Add(_creditLabel);
+
+            infoRow.Controls.Add(versionRow, 0, 0);
 
             _languageSelector = new ComboBox
             {
@@ -200,21 +227,10 @@ namespace NeuroSpec
             };
             _updateLinkLabel.LinkClicked += UpdateLinkLabel_LinkClicked;
 
-            _creditLabel = new Label
-            {
-                Text = "by 亗 Casper",
-                Font = new Font("Segoe UI", 8f, FontStyle.Italic),
-                ForeColor = ColorTextMuted,
-                AutoSize = true,
-                BackColor = Color.Transparent,
-                Margin = new Padding(0, 6, 0, 0)
-            };
-
             headerPanel.Controls.Add(titleLabel, 0, 0);
             headerPanel.Controls.Add(_subtitleLabel, 0, 1);
             headerPanel.Controls.Add(infoRow, 0, 2);
             headerPanel.Controls.Add(_updateLinkLabel, 0, 3);
-            headerPanel.Controls.Add(_creditLabel, 0, 4);
             _rootLayout.Controls.Add(headerPanel, 0, 0);
 
             // ---------- Панель с характеристиками (прокручиваемая карточка) ----------
@@ -759,6 +775,18 @@ namespace NeuroSpec
                 catch
                 {
                 }
+            }
+        }
+
+        private void CreditLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo("https://t.me/WZ_Casper") { UseShellExecute = true });
+            }
+            catch
+            {
+                // Если Telegram/браузер не открылся - тихо игнорируем.
             }
         }
 
