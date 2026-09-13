@@ -30,6 +30,8 @@ namespace NeuroSpec
         private static readonly Color ColorAccentHover = Color.FromArgb(60, 140, 240);
         private static readonly Color ColorSuccess = Color.FromArgb(63, 185, 80);
         private static readonly Color ColorError = Color.FromArgb(240, 90, 90);
+        private static readonly Color ColorDonate = Color.FromArgb(219, 68, 107);
+        private static readonly Color ColorDonateHover = Color.FromArgb(235, 90, 125);
 
         // ---------- Тёмное оформление системной рамки окна (DWM) ----------
         [DllImport("dwmapi.dll")]
@@ -48,11 +50,13 @@ namespace NeuroSpec
         private readonly Label _versionLabel;
         private readonly Label _loadingLabel;
         private readonly Label _statusLabel;
+        private readonly Label _creditLabel;
         private readonly LinkLabel _updateLinkLabel;
         private readonly ComboBox _languageSelector;
         private readonly Button _copyButton;
         private readonly Button _refreshButton;
         private readonly Button _moreButton;
+        private readonly Button _donateButton;
         private readonly ContextMenuStrip _moreMenu;
         private readonly ToolStripMenuItem _menuCopyImageItem;
         private readonly ToolStripMenuItem _menuSaveTxtItem;
@@ -109,11 +113,12 @@ namespace NeuroSpec
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 4,
+                RowCount = 5,
                 AutoSize = true,
                 BackColor = ColorBackground,
                 Margin = new Padding(0, 0, 0, 15)
             };
+            headerPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             headerPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             headerPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             headerPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -195,10 +200,21 @@ namespace NeuroSpec
             };
             _updateLinkLabel.LinkClicked += UpdateLinkLabel_LinkClicked;
 
+            _creditLabel = new Label
+            {
+                Text = "by 亗 Casper",
+                Font = new Font("Segoe UI", 8f, FontStyle.Italic),
+                ForeColor = ColorTextMuted,
+                AutoSize = true,
+                BackColor = Color.Transparent,
+                Margin = new Padding(0, 6, 0, 0)
+            };
+
             headerPanel.Controls.Add(titleLabel, 0, 0);
             headerPanel.Controls.Add(_subtitleLabel, 0, 1);
             headerPanel.Controls.Add(infoRow, 0, 2);
             headerPanel.Controls.Add(_updateLinkLabel, 0, 3);
+            headerPanel.Controls.Add(_creditLabel, 0, 4);
             _rootLayout.Controls.Add(headerPanel, 0, 0);
 
             // ---------- Панель с характеристиками (прокручиваемая карточка) ----------
@@ -237,7 +253,7 @@ namespace NeuroSpec
             var footerPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 4,
+                ColumnCount = 5,
                 RowCount = 1,
                 AutoSize = true,
                 BackColor = ColorBackground,
@@ -245,6 +261,7 @@ namespace NeuroSpec
             };
             footerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             footerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+            footerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             footerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             footerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
@@ -292,6 +309,25 @@ namespace NeuroSpec
             _copyButton = CreateButton(isPrimary: true, minWidth: 120);
             _copyButton.Click += CopyButton_Click;
             footerPanel.Controls.Add(_copyButton, 3, 0);
+
+            _donateButton = new Button
+            {
+                Text = "\u2764 Donate",
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                MinimumSize = new Size(120, 38),
+                Padding = new Padding(16, 0, 16, 0),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                BackColor = ColorDonate,
+                ForeColor = Color.White
+            };
+            _donateButton.FlatAppearance.BorderSize = 0;
+            _donateButton.MouseEnter += (s, e) => _donateButton.BackColor = ColorDonateHover;
+            _donateButton.MouseLeave += (s, e) => _donateButton.BackColor = ColorDonate;
+            _donateButton.Click += DonateButton_Click;
+            footerPanel.Controls.Add(_donateButton, 4, 0);
 
             _rootLayout.Controls.Add(footerPanel, 0, 2);
 
@@ -723,6 +759,18 @@ namespace NeuroSpec
                 catch
                 {
                 }
+            }
+        }
+
+        private void DonateButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo("https://dalink.to/wz_casper") { UseShellExecute = true });
+            }
+            catch
+            {
+                // Если браузер не запустился - тихо игнорируем, чтобы не мешать работе приложения.
             }
         }
 
