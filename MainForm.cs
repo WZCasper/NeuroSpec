@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -57,6 +58,8 @@ namespace NeuroSpec
         private readonly Button _refreshButton;
         private readonly Button _moreButton;
         private readonly Button _donateButton;
+        private readonly ComboBox _gameSelector;
+        private readonly Button _rateButton;
         private readonly ContextMenuStrip _moreMenu;
         private readonly ToolStripMenuItem _menuCopyImageItem;
         private readonly ToolStripMenuItem _menuSaveTxtItem;
@@ -99,12 +102,13 @@ namespace NeuroSpec
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 3,
+                RowCount = 4,
                 BackColor = ColorBackground,
                 Padding = new Padding(20)
             };
             _rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             _rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+            _rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             _rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             Controls.Add(_rootLayout);
 
@@ -265,6 +269,73 @@ namespace NeuroSpec
             _specsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
             _contentPanel.Controls.Add(_specsTable);
 
+            // ---------- Панель оценки производительности ----------
+            var ratingPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
+                RowCount = 1,
+                AutoSize = true,
+                BackColor = ColorPanel,
+                Padding = new Padding(16, 12, 16, 12),
+                Margin = new Padding(0, 15, 0, 0)
+            };
+            ratingPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            ratingPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+            ratingPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+
+            var ratingLabel = new Label
+            {
+                Text = "Игра:",
+                ForeColor = ColorTextMuted,
+                AutoSize = true,
+                Anchor = AnchorStyles.Left,
+                Margin = new Padding(0, 9, 10, 0)
+            };
+            ratingPanel.Controls.Add(ratingLabel, 0, 0);
+
+            _gameSelector = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                DrawMode = DrawMode.OwnerDrawFixed,
+                ItemHeight = 22,
+                Dock = DockStyle.Fill,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = ColorBackground,
+                ForeColor = ColorText,
+                Font = new Font("Segoe UI", 9f, FontStyle.Regular),
+                Margin = new Padding(0, 4, 10, 4)
+            };
+            _gameSelector.Items.Add("Только общая оценка ПК");
+            foreach (GameProfile game in PerformanceEvaluator.GetGameCatalog())
+            {
+                _gameSelector.Items.Add(game.Name);
+            }
+            _gameSelector.SelectedIndex = 0;
+            _gameSelector.DrawItem += LanguageSelector_DrawItem;
+            ratingPanel.Controls.Add(_gameSelector, 1, 0);
+
+            _rateButton = new Button
+            {
+                Text = "ОЦЕНИТЬ",
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                MinimumSize = new Size(120, 36),
+                Padding = new Padding(16, 0, 16, 0),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                BackColor = ColorAccent,
+                ForeColor = Color.White
+            };
+            _rateButton.FlatAppearance.BorderSize = 0;
+            _rateButton.MouseEnter += (s, e) => _rateButton.BackColor = ColorAccentHover;
+            _rateButton.MouseLeave += (s, e) => _rateButton.BackColor = ColorAccent;
+            _rateButton.Click += RateButton_Click;
+            ratingPanel.Controls.Add(_rateButton, 2, 0);
+
+            _rootLayout.Controls.Add(ratingPanel, 0, 2);
+
             // ---------- Нижняя панель с кнопками ----------
             var footerPanel = new TableLayoutPanel
             {
@@ -345,7 +416,7 @@ namespace NeuroSpec
             _donateButton.Click += DonateButton_Click;
             footerPanel.Controls.Add(_donateButton, 4, 0);
 
-            _rootLayout.Controls.Add(footerPanel, 0, 2);
+            _rootLayout.Controls.Add(footerPanel, 0, 3);
 
             ApplyStaticTexts();
 
@@ -788,6 +859,28 @@ namespace NeuroSpec
             {
                 // Если Telegram/браузер не открылся - тихо игнорируем.
             }
+        }
+
+        private void RateButton_Click(object sender, EventArgs e)
+        {
+            if (_currentSpecs == null)
+            {
+                ShowStatus("Сначала дождитесь загрузки характеристик компьютера.", ColorError);
+                return;
+            }
+
+            GameProfile selectedGame = null;
+            if (_gameSelector.SelectedIndex > 0)
+            {
+                string gameName = _gameSelector.SelectedItem?.ToString();
+                selectedGame = PerformanceEvaluator.GetGameCatalog()
+                    .FirstOrDefault(g => g.Name == gameName);
+            }
+
+            PerformanceResult result = PerformanceEvaluator.Evaluate(_currentSpecs, selectedGame);
+
+            using var resultForm = new PerformanceResultForm(result);
+            resultForm.ShowDialog(this);
         }
 
         private void DonateButton_Click(object sender, EventArgs e)
